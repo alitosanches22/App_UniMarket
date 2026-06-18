@@ -11,84 +11,84 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.example.aplicacion_unimarket.databinding.FragmentProductDetailBinding
+import com.example.aplicacion_unimarket.databinding.FragmentoDetalleProductoBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 
 class ProductDetailFragment : Fragment() {
 
-    private var _binding: FragmentProductDetailBinding? = null
+    private var _binding: FragmentoDetalleProductoBinding? = null
     private val binding get() = _binding!!
-    private var productId: String = ""
+    private var idProducto: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentProductDetailBinding.inflate(inflater, container, false)
+        _binding = FragmentoDetalleProductoBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        productId = requireArguments().getString(ARG_PRODUCT_ID).orEmpty()
+        idProducto = requireArguments().getString(ARG_PRODUCT_ID).orEmpty()
         renderProduct()
     }
 
     private fun renderProduct() {
-        val product = MarketplaceRepository.findProduct(productId)
+        val product = MarketplaceRepository.findProduct(idProducto)
         if (product == null) {
             Snackbar.make(binding.root, "La publicacion ya no existe.", Snackbar.LENGTH_SHORT).show()
             findNavController().navigateUp()
             return
         }
 
-        binding.heroCategoryText.text = product.category.displayName
-        binding.titleText.text = product.title
-        binding.priceText.text = "$${String.format("%.2f", product.price)}"
-        binding.descriptionText.text = product.description
-        binding.categoryText.text = product.category.displayName
-        binding.conditionText.text = if (product.sold) "Vendido" else product.condition
-        binding.sellerText.text = "${product.sellerName} - ${product.sellerCareer}"
-        binding.videoPanel.isVisible = product.hasVideo
-        binding.videoEmptyText.isVisible = !product.hasVideo
-        binding.favoriteButton.text =
+        binding.textoCategoriaPrincipal.text = product.categoria.nombreVisible
+        binding.textoTitulo.text = product.titulo
+        binding.textoPrecio.text = "$${String.format("%.2f", product.precio)}"
+        binding.textoDescripcion.text = product.descripcion
+        binding.textoCategoria.text = product.categoria.nombreVisible
+        binding.textoCondicion.text = if (product.vendido) "Vendido" else product.estado
+        binding.textoVendedor.text = "${product.nombreVendedor} - ${product.carreraVendedor}"
+        binding.panelVideo.isVisible = product.tieneVideo
+        binding.textoSinVideo.isVisible = !product.tieneVideo
+        binding.botonFavorito.text =
             if (MarketplaceRepository.isFavorite(product.id)) "Quitar de favoritos" else "Agregar a favoritos"
 
-        renderGallery(product.imageCount)
+        renderGallery(product.cantidadImagenes)
 
-        binding.favoriteButton.setOnClickListener {
+        binding.botonFavorito.setOnClickListener {
             MarketplaceRepository.toggleFavorite(product.id)
             renderProduct()
         }
 
-        binding.contactSellerButton.setOnClickListener {
+        binding.botonContactarVendedor.setOnClickListener {
             findNavController().navigate(
-                R.id.action_productDetailFragment_to_chatFragment,
+                R.id.accion_detalle_producto_a_chat,
                 bundleOf(ARG_PRODUCT_ID to product.id)
             )
         }
 
-        val isOwner = product.sellerName == MarketplaceRepository.currentUser.fullName
-        binding.ownerActionsGroup.isVisible = isOwner
-        binding.editProductButton.setOnClickListener {
+        val isOwner = product.nombreVendedor == MarketplaceRepository.currentUser.nombreCompleto
+        binding.grupoAccionesDueno.isVisible = isOwner
+        binding.botonEditarProducto.setOnClickListener {
             findNavController().navigate(
-                R.id.action_productDetailFragment_to_publishProductFragment,
+                R.id.accion_detalle_producto_a_publicar_producto,
                 bundleOf(ARG_PRODUCT_ID to product.id)
             )
         }
-        binding.markSoldButton.setOnClickListener {
+        binding.botonMarcarVendido.setOnClickListener {
             MarketplaceRepository.markSold(product.id)
             renderProduct()
         }
-        binding.deleteProductButton.setOnClickListener {
+        binding.botonEliminarProducto.setOnClickListener {
             confirmDelete(product.id)
         }
     }
 
     private fun renderGallery(imageCount: Int) {
-        binding.galleryContainer.removeAllViews()
+        binding.contenedorGaleria.removeAllViews()
         repeat(imageCount.coerceAtLeast(1)) { index ->
             val item = TextView(requireContext()).apply {
                 text = "Imagen ${index + 1}"
@@ -102,18 +102,18 @@ class ProductDetailFragment : Fragment() {
             ).apply {
                 marginEnd = resources.getDimensionPixelSize(R.dimen.spacing_sm)
             }
-            binding.galleryContainer.addView(item, params)
+            binding.contenedorGaleria.addView(item, params)
         }
     }
 
-    private fun confirmDelete(productId: String) {
+    private fun confirmDelete(idProducto: String) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Eliminar publicacion")
             .setMessage("Esta accion quitara el producto de la lista principal y favoritos.")
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Eliminar") { _, _ ->
-                MarketplaceRepository.deleteProduct(productId)
-                findNavController().navigate(R.id.action_productDetailFragment_to_homeFragment)
+                MarketplaceRepository.deleteProduct(idProducto)
+                findNavController().navigate(R.id.accion_detalle_producto_a_inicio)
             }
             .show()
     }
@@ -124,6 +124,6 @@ class ProductDetailFragment : Fragment() {
     }
 
     companion object {
-        const val ARG_PRODUCT_ID = "productId"
+        const val ARG_PRODUCT_ID = "idProducto"
     }
 }

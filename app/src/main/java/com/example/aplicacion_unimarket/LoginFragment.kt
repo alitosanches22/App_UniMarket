@@ -7,12 +7,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
-import com.example.aplicacion_unimarket.databinding.FragmentLoginBinding
+import com.example.aplicacion_unimarket.databinding.FragmentoInicioSesionBinding
 import com.google.android.material.snackbar.Snackbar
 
 class LoginFragment : Fragment() {
 
-    private var _binding: FragmentLoginBinding? = null
+    private var _binding: FragmentoInicioSesionBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -20,18 +20,18 @@ class LoginFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentLoginBinding.inflate(inflater, container, false)
+        _binding = FragmentoInicioSesionBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.emailInput.setText(MarketplaceRepository.currentUser.email)
+        binding.entradaCorreo.setText(MarketplaceRepository.currentUser.correo)
 
-        binding.loginButton.setOnClickListener {
-            val email = binding.emailInput.text?.toString().orEmpty().trim()
-            val password = binding.passwordInput.text?.toString().orEmpty()
+        binding.botonIniciarSesion.setOnClickListener {
+            val email = binding.entradaCorreo.text?.toString().orEmpty().trim()
+            val password = binding.entradaContrasena.text?.toString().orEmpty()
 
             if (email.isBlank() || password.isBlank()) {
                 Snackbar.make(binding.root, "Ingresa correo y contrasena.", Snackbar.LENGTH_SHORT).show()
@@ -39,13 +39,13 @@ class LoginFragment : Fragment() {
             }
 
             val navOptions = NavOptions.Builder()
-                .setPopUpTo(R.id.loginFragment, true)
+                .setPopUpTo(R.id.fragmentoInicioSesion, true)
                 .build()
-            findNavController().navigate(R.id.action_loginFragment_to_homeFragment, null, navOptions)
+            findNavController().navigate(R.id.accion_inicio_sesion_a_inicio, null, navOptions)
         }
 
-        binding.registerButton.setOnClickListener {
-            findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
+        binding.botonRegistrarse.setOnClickListener {
+            findNavController().navigate(R.id.accion_inicio_sesion_a_registro)
         }
     }
 

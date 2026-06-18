@@ -9,50 +9,50 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.example.aplicacion_unimarket.databinding.FragmentHomeBinding
-import com.example.aplicacion_unimarket.databinding.ItemProductBinding
+import com.example.aplicacion_unimarket.databinding.FragmentoInicioBinding
+import com.example.aplicacion_unimarket.databinding.ItemProductoBinding
 import com.google.android.material.chip.Chip
 
 class HomeFragment : Fragment() {
 
-    private var _binding: FragmentHomeBinding? = null
+    private var _binding: FragmentoInicioBinding? = null
     private val binding get() = _binding!!
-    private var selectedCategory: ProductCategory? = null
+    private var selectedCategory: CategoriaProducto? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        _binding = FragmentoInicioBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupCategory(binding.chipAll, null)
-        setupCategory(binding.chipBooks, ProductCategory.BOOKS)
-        setupCategory(binding.chipElectronics, ProductCategory.ELECTRONICS)
-        setupCategory(binding.chipLab, ProductCategory.LAB)
-        setupCategory(binding.chipTutoring, ProductCategory.TUTORING)
-        setupCategory(binding.chipOther, ProductCategory.OTHER)
+        setupCategory(binding.chipTodo, null)
+        setupCategory(binding.chipLibros, CategoriaProducto.LIBROS)
+        setupCategory(binding.chipElectronicos, CategoriaProducto.ELECTRONICOS)
+        setupCategory(binding.chipLaboratorio, CategoriaProducto.LABORATORIO)
+        setupCategory(binding.chipTutorias, CategoriaProducto.TUTORIAS)
+        setupCategory(binding.chipOtros, CategoriaProducto.OTROS)
 
-        binding.searchInput.doOnTextChanged { _, _, _, _ -> renderProducts() }
-        binding.publishProductButton.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_publishProductFragment)
+        binding.entradaBusqueda.doOnTextChanged { _, _, _, _ -> renderProducts() }
+        binding.botonPublicarProducto.setOnClickListener {
+            findNavController().navigate(R.id.accion_inicio_a_publicar_producto)
         }
-        binding.favoritesButton.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_favoritesFragment)
+        binding.botonFavoritos.setOnClickListener {
+            findNavController().navigate(R.id.accion_inicio_a_favoritos)
         }
-        binding.profileButton.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_profileFragment)
+        binding.botonPerfil.setOnClickListener {
+            findNavController().navigate(R.id.accion_inicio_a_perfil)
         }
 
         renderProducts()
     }
 
-    private fun setupCategory(chip: Chip, category: ProductCategory?) {
+    private fun setupCategory(chip: Chip, category: CategoriaProducto?) {
         chip.setOnClickListener {
             selectedCategory = category
             renderProducts()
@@ -60,42 +60,42 @@ class HomeFragment : Fragment() {
     }
 
     private fun renderProducts() {
-        val query = binding.searchInput.text?.toString().orEmpty()
+        val query = binding.entradaBusqueda.text?.toString().orEmpty()
         val products = MarketplaceRepository.searchProducts(query, selectedCategory)
-        binding.productsContainer.removeAllViews()
-        binding.emptyState.isVisible = products.isEmpty()
+        binding.contenedorProductos.removeAllViews()
+        binding.textoEstadoVacio.isVisible = products.isEmpty()
 
         products.forEach { product ->
-            val itemBinding = ItemProductBinding.inflate(layoutInflater, binding.productsContainer, false)
+            val itemBinding = ItemProductoBinding.inflate(layoutInflater, binding.contenedorProductos, false)
             bindProduct(itemBinding, product)
-            binding.productsContainer.addView(itemBinding.root)
+            binding.contenedorProductos.addView(itemBinding.root)
         }
     }
 
-    private fun bindProduct(itemBinding: ItemProductBinding, product: Product) {
-        itemBinding.thumbnailText.text = product.category.displayName.take(3).uppercase()
-        itemBinding.titleText.text = product.title
-        itemBinding.priceText.text = "$${String.format("%.2f", product.price)}"
-        itemBinding.descriptionText.text = product.description
-        itemBinding.categoryText.text = product.category.displayName
-        itemBinding.statusText.text = if (product.sold) "Vendido" else product.condition
-        itemBinding.sellerText.text = product.sellerName
-        itemBinding.favoriteButton.text =
+    private fun bindProduct(itemBinding: ItemProductoBinding, product: Producto) {
+        itemBinding.textoMiniatura.text = product.categoria.nombreVisible.take(3).uppercase()
+        itemBinding.textoTitulo.text = product.titulo
+        itemBinding.textoPrecio.text = "$${String.format("%.2f", product.precio)}"
+        itemBinding.textoDescripcion.text = product.descripcion
+        itemBinding.textoCategoria.text = product.categoria.nombreVisible
+        itemBinding.textoEstado.text = if (product.vendido) "Vendido" else product.estado
+        itemBinding.textoVendedor.text = product.nombreVendedor
+        itemBinding.botonFavorito.text =
             if (MarketplaceRepository.isFavorite(product.id)) "Guardado" else "Guardar"
 
         itemBinding.root.setOnClickListener {
             openDetail(product.id)
         }
-        itemBinding.favoriteButton.setOnClickListener {
+        itemBinding.botonFavorito.setOnClickListener {
             MarketplaceRepository.toggleFavorite(product.id)
             renderProducts()
         }
     }
 
-    private fun openDetail(productId: String) {
+    private fun openDetail(idProducto: String) {
         findNavController().navigate(
-            R.id.action_homeFragment_to_productDetailFragment,
-            bundleOf(ProductDetailFragment.ARG_PRODUCT_ID to productId)
+            R.id.accion_inicio_a_detalle_producto,
+            bundleOf(ProductDetailFragment.ARG_PRODUCT_ID to idProducto)
         )
     }
 

@@ -9,13 +9,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
-import com.example.aplicacion_unimarket.databinding.FragmentPublishProductBinding
+import com.example.aplicacion_unimarket.databinding.FragmentoPublicarProductoBinding
 import com.google.android.material.snackbar.Snackbar
 import kotlin.math.max
 
 class PublishProductFragment : Fragment() {
 
-    private var _binding: FragmentPublishProductBinding? = null
+    private var _binding: FragmentoPublicarProductoBinding? = null
     private val binding get() = _binding!!
     private var selectedImageCount = 1
     private var hasSelectedVideo = false
@@ -36,7 +36,7 @@ class PublishProductFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentPublishProductBinding.inflate(inflater, container, false)
+        _binding = FragmentoPublicarProductoBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -48,21 +48,21 @@ class PublishProductFragment : Fragment() {
         setupMultimediaButtons()
         fillFormIfEditing()
 
-        binding.publishButton.setOnClickListener {
+        binding.botonPublicar.setOnClickListener {
             saveProduct()
         }
     }
 
     private fun setupSpinners() {
-        val categories = ProductCategory.values().map { it.displayName }
-        binding.categorySpinner.adapter = ArrayAdapter(
+        val categories = CategoriaProducto.values().map { it.nombreVisible }
+        binding.selectorCategoria.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_dropdown_item,
             categories
         )
 
         val conditions = listOf("Nuevo", "Usado - excelente", "Usado - bueno", "Usado - aceptable", "Disponible")
-        binding.conditionSpinner.adapter = ArrayAdapter(
+        binding.selectorEstado.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_dropdown_item,
             conditions
@@ -70,10 +70,10 @@ class PublishProductFragment : Fragment() {
     }
 
     private fun setupMultimediaButtons() {
-        binding.addImagesButton.setOnClickListener {
+        binding.botonAgregarImagenes.setOnClickListener {
             imagePicker.launch("image/*")
         }
-        binding.addVideoButton.setOnClickListener {
+        binding.botonAgregarVideo.setOnClickListener {
             videoPicker.launch("video/*")
         }
         updateMultimediaLabels()
@@ -81,23 +81,23 @@ class PublishProductFragment : Fragment() {
 
     private fun fillFormIfEditing() {
         val product = editingProductId?.let { MarketplaceRepository.findProduct(it) } ?: return
-        binding.screenTitleText.text = "Editar publicacion"
-        binding.publishButton.text = "Guardar cambios"
-        binding.titleInput.setText(product.title)
-        binding.descriptionInput.setText(product.description)
-        binding.priceInput.setText(String.format("%.2f", product.price))
-        selectedImageCount = product.imageCount
-        hasSelectedVideo = product.hasVideo
+        binding.textoTituloPantalla.text = "Editar publicacion"
+        binding.botonPublicar.text = "Guardar cambios"
+        binding.entradaTitulo.setText(product.titulo)
+        binding.entradaDescripcion.setText(product.descripcion)
+        binding.entradaPrecio.setText(String.format("%.2f", product.precio))
+        selectedImageCount = product.cantidadImagenes
+        hasSelectedVideo = product.tieneVideo
 
-        val categoryPosition = ProductCategory.values().indexOf(product.category)
+        val categoryPosition = CategoriaProducto.values().indexOf(product.categoria)
         if (categoryPosition >= 0) {
-            binding.categorySpinner.setSelection(categoryPosition)
+            binding.selectorCategoria.setSelection(categoryPosition)
         }
 
-        val conditionAdapter = binding.conditionSpinner.adapter
+        val conditionAdapter = binding.selectorEstado.adapter
         for (index in 0 until conditionAdapter.count) {
-            if (conditionAdapter.getItem(index) == product.condition) {
-                binding.conditionSpinner.setSelection(index)
+            if (conditionAdapter.getItem(index) == product.estado) {
+                binding.selectorEstado.setSelection(index)
                 break
             }
         }
@@ -106,52 +106,52 @@ class PublishProductFragment : Fragment() {
     }
 
     private fun saveProduct() {
-        val title = binding.titleInput.text?.toString().orEmpty().trim()
-        val description = binding.descriptionInput.text?.toString().orEmpty().trim()
-        val price = binding.priceInput.text?.toString().orEmpty().toDoubleOrNull()
+        val titulo = binding.entradaTitulo.text?.toString().orEmpty().trim()
+        val descripcion = binding.entradaDescripcion.text?.toString().orEmpty().trim()
+        val precio = binding.entradaPrecio.text?.toString().orEmpty().toDoubleOrNull()
 
-        if (title.isBlank() || description.isBlank() || price == null) {
+        if (titulo.isBlank() || descripcion.isBlank() || precio == null) {
             Snackbar.make(binding.root, "Completa titulo, descripcion y precio valido.", Snackbar.LENGTH_SHORT).show()
             return
         }
 
-        val category = ProductCategory.fromDisplayName(binding.categorySpinner.selectedItem.toString())
-        val condition = binding.conditionSpinner.selectedItem.toString()
+        val categoria = CategoriaProducto.desdeNombreVisible(binding.selectorCategoria.selectedItem.toString())
+        val estado = binding.selectorEstado.selectedItem.toString()
 
-        val productId = editingProductId
-        if (productId == null) {
+        val idProducto = editingProductId
+        if (idProducto == null) {
             MarketplaceRepository.addProduct(
-                title = title,
-                description = description,
-                price = price,
-                category = category,
-                condition = condition,
-                imageCount = selectedImageCount,
-                hasVideo = hasSelectedVideo
+                titulo = titulo,
+                descripcion = descripcion,
+                precio = precio,
+                categoria = categoria,
+                estado = estado,
+                cantidadImagenes = selectedImageCount,
+                tieneVideo = hasSelectedVideo
             )
         } else {
             MarketplaceRepository.updateProduct(
-                productId = productId,
-                title = title,
-                description = description,
-                price = price,
-                category = category,
-                condition = condition,
-                imageCount = selectedImageCount,
-                hasVideo = hasSelectedVideo
+                idProducto = idProducto,
+                titulo = titulo,
+                descripcion = descripcion,
+                precio = precio,
+                categoria = categoria,
+                estado = estado,
+                cantidadImagenes = selectedImageCount,
+                tieneVideo = hasSelectedVideo
             )
         }
 
         val navOptions = NavOptions.Builder()
-            .setPopUpTo(R.id.homeFragment, false)
+            .setPopUpTo(R.id.fragmentoInicio, false)
             .build()
-        findNavController().navigate(R.id.action_publishProductFragment_to_homeFragment, null, navOptions)
+        findNavController().navigate(R.id.accion_publicar_producto_a_inicio, null, navOptions)
     }
 
     private fun updateMultimediaLabels() {
         if (_binding == null) return
-        binding.imagesCountText.text = "$selectedImageCount imagen(es) seleccionada(s)"
-        binding.videoStatusText.text = if (hasSelectedVideo) "Video demostrativo agregado" else "Sin video demostrativo"
+        binding.textoCantidadImagenes.text = "$selectedImageCount imagen(es) seleccionada(s)"
+        binding.textoEstadoVideo.text = if (hasSelectedVideo) "Video demostrativo agregado" else "Sin video demostrativo"
     }
 
     override fun onDestroyView() {

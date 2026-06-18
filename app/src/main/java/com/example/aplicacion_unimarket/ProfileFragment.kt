@@ -7,13 +7,13 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.example.aplicacion_unimarket.databinding.FragmentProfileBinding
-import com.example.aplicacion_unimarket.databinding.ItemMyProductBinding
+import com.example.aplicacion_unimarket.databinding.FragmentoPerfilBinding
+import com.example.aplicacion_unimarket.databinding.ItemMiProductoBinding
 import com.google.android.material.snackbar.Snackbar
 
 class ProfileFragment : Fragment() {
 
-    private var _binding: FragmentProfileBinding? = null
+    private var _binding: FragmentoPerfilBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -21,30 +21,30 @@ class ProfileFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentProfileBinding.inflate(inflater, container, false)
+        _binding = FragmentoPerfilBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val user = MarketplaceRepository.currentUser
-        binding.avatarText.text = user.firstName.first().uppercase()
-        binding.nameText.text = user.fullName
-        binding.emailText.text = user.email
-        binding.careerText.text = user.career
-        binding.phoneText.text = user.phone
+        binding.textoAvatar.text = user.nombre.first().uppercase()
+        binding.textoNombre.text = user.nombreCompleto
+        binding.textoCorreo.text = user.correo
+        binding.textoCarrera.text = user.carrera
+        binding.textoTelefono.text = user.telefono
 
-        binding.favoritesButton.setOnClickListener {
-            findNavController().navigate(R.id.action_profileFragment_to_favoritesFragment)
+        binding.botonFavoritos.setOnClickListener {
+            findNavController().navigate(R.id.accion_perfil_a_favoritos)
         }
-        binding.publishButton.setOnClickListener {
-            findNavController().navigate(R.id.action_profileFragment_to_publishProductFragment)
+        binding.botonPublicar.setOnClickListener {
+            findNavController().navigate(R.id.accion_perfil_a_publicar_producto)
         }
-        binding.editProfileButton.setOnClickListener {
+        binding.botonEditarPerfil.setOnClickListener {
             Snackbar.make(binding.root, "La edicion de perfil se conectara al backend.", Snackbar.LENGTH_SHORT).show()
         }
-        binding.logoutButton.setOnClickListener {
-            findNavController().navigate(R.id.action_profileFragment_to_loginFragment)
+        binding.botonCerrarSesion.setOnClickListener {
+            findNavController().navigate(R.id.accion_perfil_a_inicio_sesion)
         }
 
         renderStats()
@@ -53,41 +53,41 @@ class ProfileFragment : Fragment() {
 
     private fun renderStats() {
         val myProducts = MarketplaceRepository.myProducts()
-        binding.myProductsCountText.text = myProducts.size.toString()
-        binding.salesCountText.text = myProducts.count { it.sold }.toString()
-        binding.favoritesCountText.text = MarketplaceRepository.favoriteProducts().size.toString()
+        binding.textoCantidadPublicaciones.text = myProducts.size.toString()
+        binding.textoCantidadVentas.text = myProducts.count { it.vendido }.toString()
+        binding.textoCantidadFavoritos.text = MarketplaceRepository.favoriteProducts().size.toString()
     }
 
     private fun renderMyProducts() {
-        binding.myProductsContainer.removeAllViews()
+        binding.contenedorMisProductos.removeAllViews()
         MarketplaceRepository.myProducts().forEach { product ->
-            val itemBinding = ItemMyProductBinding.inflate(layoutInflater, binding.myProductsContainer, false)
-            itemBinding.titleText.text = product.title
-            itemBinding.priceText.text = "$${String.format("%.2f", product.price)}"
-            itemBinding.statusText.text = if (product.sold) "Vendido" else product.condition
-            itemBinding.editButton.setOnClickListener {
+            val itemBinding = ItemMiProductoBinding.inflate(layoutInflater, binding.contenedorMisProductos, false)
+            itemBinding.textoTitulo.text = product.titulo
+            itemBinding.textoPrecio.text = "$${String.format("%.2f", product.precio)}"
+            itemBinding.textoEstado.text = if (product.vendido) "Vendido" else product.estado
+            itemBinding.botonEditar.setOnClickListener {
                 findNavController().navigate(
-                    R.id.action_profileFragment_to_publishProductFragment,
+                    R.id.accion_perfil_a_publicar_producto,
                     bundleOf(ProductDetailFragment.ARG_PRODUCT_ID to product.id)
                 )
             }
-            itemBinding.soldButton.setOnClickListener {
+            itemBinding.botonVendido.setOnClickListener {
                 MarketplaceRepository.markSold(product.id)
                 renderStats()
                 renderMyProducts()
             }
-            itemBinding.deleteButton.setOnClickListener {
+            itemBinding.botonEliminar.setOnClickListener {
                 MarketplaceRepository.deleteProduct(product.id)
                 renderStats()
                 renderMyProducts()
             }
             itemBinding.root.setOnClickListener {
                 findNavController().navigate(
-                    R.id.action_profileFragment_to_productDetailFragment,
+                    R.id.accion_perfil_a_detalle_producto,
                     bundleOf(ProductDetailFragment.ARG_PRODUCT_ID to product.id)
                 )
             }
-            binding.myProductsContainer.addView(itemBinding.root)
+            binding.contenedorMisProductos.addView(itemBinding.root)
         }
     }
 

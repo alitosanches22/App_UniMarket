@@ -8,36 +8,36 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.example.aplicacion_unimarket.databinding.FragmentChatBinding
+import com.example.aplicacion_unimarket.databinding.FragmentoChatBinding
 
 class ChatFragment : Fragment() {
 
-    private var _binding: FragmentChatBinding? = null
+    private var _binding: FragmentoChatBinding? = null
     private val binding get() = _binding!!
-    private var productId: String = ""
+    private var idProducto: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentChatBinding.inflate(inflater, container, false)
+        _binding = FragmentoChatBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        productId = requireArguments().getString(ProductDetailFragment.ARG_PRODUCT_ID).orEmpty()
+        idProducto = requireArguments().getString(ProductDetailFragment.ARG_PRODUCT_ID).orEmpty()
 
-        val product = MarketplaceRepository.findProduct(productId)
-        binding.chatTitleText.text = product?.sellerName ?: "Vendedor"
-        binding.productContextText.text = product?.title ?: "Producto"
+        val product = MarketplaceRepository.findProduct(idProducto)
+        binding.textoTituloChat.text = product?.nombreVendedor ?: "Vendedor"
+        binding.textoContextoProducto.text = product?.titulo ?: "Producto"
 
-        binding.sendButton.setOnClickListener {
-            val message = binding.messageInput.text?.toString().orEmpty().trim()
+        binding.botonEnviar.setOnClickListener {
+            val message = binding.entradaMensaje.text?.toString().orEmpty().trim()
             if (message.isBlank()) return@setOnClickListener
-            MarketplaceRepository.sendMessage(productId, message)
-            binding.messageInput.text?.clear()
+            MarketplaceRepository.sendMessage(idProducto, message)
+            binding.entradaMensaje.text?.clear()
             renderMessages()
         }
 
@@ -45,10 +45,10 @@ class ChatFragment : Fragment() {
     }
 
     private fun renderMessages() {
-        binding.messagesContainer.removeAllViews()
-        MarketplaceRepository.messagesFor(productId).forEach { message ->
+        binding.contenedorMensajes.removeAllViews()
+        MarketplaceRepository.messagesFor(idProducto).forEach { message ->
             val messageView = TextView(requireContext()).apply {
-                text = "${message.sender}\n${message.body}"
+                text = "${message.remitente}\n${message.contenido}"
                 setTextColor(resources.getColor(R.color.unimarket_ink, null))
                 setPadding(
                     resources.getDimensionPixelSize(R.dimen.spacing_md),
@@ -57,20 +57,20 @@ class ChatFragment : Fragment() {
                     resources.getDimensionPixelSize(R.dimen.spacing_sm)
                 )
                 setBackgroundResource(
-                    if (message.fromCurrentUser) R.drawable.bg_message_me else R.drawable.bg_message_other
+                    if (message.enviadoPorUsuarioActual) R.drawable.bg_message_me else R.drawable.bg_message_other
                 )
             }
             val params = LinearLayout.LayoutParams(
                 resources.getDimensionPixelSize(R.dimen.chat_bubble_max_width),
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
-                gravity = if (message.fromCurrentUser) Gravity.END else Gravity.START
+                gravity = if (message.enviadoPorUsuarioActual) Gravity.END else Gravity.START
                 bottomMargin = resources.getDimensionPixelSize(R.dimen.spacing_sm)
             }
-            binding.messagesContainer.addView(messageView, params)
+            binding.contenedorMensajes.addView(messageView, params)
         }
-        binding.messagesScroll.post {
-            binding.messagesScroll.fullScroll(View.FOCUS_DOWN)
+        binding.scrollMensajes.post {
+            binding.scrollMensajes.fullScroll(View.FOCUS_DOWN)
         }
     }
 
