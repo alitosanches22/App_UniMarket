@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/grafo_navegacion"
+    app:startDestination="@id/fragmentoInicioSesion">
+
+    <fragment
+        android:id="@+id/fragmentoInicioSesion"
+        android:name="com.example.aplicacion_unimarket.LoginFragment"
+        android:label="@string/login_title"
+        tools:layout="@layout/fragmento_inicio_sesion">
+        <action
+            android:id="@+id/accion_inicio_sesion_a_inicio"
+            app:destination="@id/fragmentoInicio"
+            app:popUpTo="@id/fragmentoInicioSesion"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/accion_inicio_sesion_a_registro"
+            app:destination="@id/fragmentoRegistro" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragmentoRegistro"
+        android:name="com.example.aplicacion_unimarket.RegisterFragment"
+        android:label="Registro"
+        tools:layout="@layout/fragmento_registro">
+        <action
+            android:id="@+id/accion_registro_a_inicio_sesion"
+            app:destination="@id/fragmentoInicioSesion"
+            app:popUpTo="@id/fragmentoInicioSesion"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragmentoInicio"
+        android:name="com.example.aplicacion_unimarket.HomeFragment"
+        android:label="@string/home_title"
+        tools:layout="@layout/fragmento_inicio">
+        <action
+            android:id="@+id/accion_inicio_a_detalle_producto"
+            app:destination="@id/fragmentoDetalleProducto" />
+        <action
+            android:id="@+id/accion_inicio_a_publicar_producto"
+            app:destination="@id/fragmentoPublicarProducto" />
+        <action
+            android:id="@+id/accion_inicio_a_favoritos"
+            app:destination="@id/fragmentoFavoritos" />
+        <action
+            android:id="@+id/accion_inicio_a_perfil"
+            app:destination="@id/fragmentoPerfil" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragmentoDetalleProducto"
+        android:name="com.example.aplicacion_unimarket.ProductDetailFragment"
+        android:label="@string/detail_title"
+        tools:layout="@layout/fragmento_detalle_producto">
+        <argument
+            android:name="idProducto"
+            app:argType="string" />
+        <action
+            android:id="@+id/accion_detalle_producto_a_chat"
+            app:destination="@id/fragmentoChat" />
+        <action
+            android:id="@+id/accion_detalle_producto_a_publicar_producto"
+            app:destination="@id/fragmentoPublicarProducto" />
+        <action
+            android:id="@+id/accion_detalle_producto_a_inicio"
+            app:destination="@id/fragmentoInicio"
+            app:popUpTo="@id/fragmentoInicio"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragmentoPublicarProducto"
+        android:name="com.example.aplicacion_unimarket.PublishProductFragment"
+        android:label="@string/publish_title"
+        tools:layout="@layout/fragmento_publicar_producto">
+        <argument
+            android:name="idProducto"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/accion_publicar_producto_a_inicio"
+            app:destination="@id/fragmentoInicio"
+            app:popUpTo="@id/fragmentoInicio"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragmentoFavoritos"
+        android:name="com.example.aplicacion_unimarket.FavoritesFragment"
+        android:label="@string/favorites_title"
+        tools:layout="@layout/fragmento_favoritos">
+        <action
+            android:id="@+id/accion_favoritos_a_detalle_producto"
+            app:destination="@id/fragmentoDetalleProducto" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragmentoChat"
+        android:name="com.example.aplicacion_unimarket.ChatFragment"
+        android:label="@string/chat_title"
+        tools:layout="@layout/fragmento_chat">
+        <argument
+            android:name="idProducto"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragmentoPerfil"
+        android:name="com.example.aplicacion_unimarket.ProfileFragment"
+        android:label="@string/profile_title"
+        tools:layout="@layout/fragmento_perfil">
+        <action
+            android:id="@+id/accion_perfil_a_favoritos"
+            app:destination="@id/fragmentoFavoritos" />
+        <action
+            android:id="@+id/accion_perfil_a_publicar_producto"
+            app:destination="@id/fragmentoPublicarProducto" />
+        <action
+            android:id="@+id/accion_perfil_a_detalle_producto"
+            app:destination="@id/fragmentoDetalleProducto" />
+        <action
+            android:id="@+id/accion_perfil_a_inicio_sesion"
+            app:destination="@id/fragmentoInicioSesion"
+            app:popUpTo="@id/fragmentoInicio"
+            app:popUpToInclusive="true" />
+    </fragment>
+</navigation>
