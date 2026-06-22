@@ -117,35 +117,65 @@ class PublishProductFragment : Fragment() {
 
         val categoria = CategoriaProducto.desdeNombreVisible(binding.selectorCategoria.selectedItem.toString())
         val estado = binding.selectorEstado.selectedItem.toString()
+        val usuario = MarketplaceRepository.usuarioAutenticado
 
-        val idProducto = editingProductId
-        if (idProducto == null) {
-            MarketplaceRepository.addProduct(
-                titulo = titulo,
-                descripcion = descripcion,
-                precio = precio,
-                categoria = categoria,
-                estado = estado,
-                cantidadImagenes = selectedImageCount,
-                tieneVideo = hasSelectedVideo
-            )
-        } else {
-            MarketplaceRepository.updateProduct(
-                idProducto = idProducto,
-                titulo = titulo,
-                descripcion = descripcion,
-                precio = precio,
-                categoria = categoria,
-                estado = estado,
-                cantidadImagenes = selectedImageCount,
-                tieneVideo = hasSelectedVideo
-            )
+        if (usuario == null) {
+            Snackbar.make(binding.root, "Inicia sesion para publicar productos.", Snackbar.LENGTH_LONG).show()
+            return
         }
 
-        val navOptions = NavOptions.Builder()
-            .setPopUpTo(R.id.fragmentoInicio, false)
-            .build()
-        findNavController().navigate(R.id.accion_publicar_producto_a_inicio, null, navOptions)
+        val idProducto = editingProductId
+        cambiarCarga(true)
+        RepositorioRemoto.guardarProducto(
+            idProducto = idProducto,
+            idVendedor = usuario.id,
+            titulo = titulo,
+            descripcion = descripcion,
+            precio = precio,
+            categoria = categoria,
+            estado = estado,
+            cantidadImagenes = selectedImageCount,
+            tieneVideo = hasSelectedVideo,
+            alCargar = {
+                if (_binding == null) return@guardarProducto
+                if (idProducto == null) {
+                    Snackbar.make(binding.root, "Producto publicado.", Snackbar.LENGTH_SHORT).show()
+                } else {
+                    MarketplaceRepository.updateProduct(
+                        idProducto = idProducto,
+                        titulo = titulo,
+                        descripcion = descripcion,
+                        precio = precio,
+                        categoria = categoria,
+                        estado = estado,
+                        cantidadImagenes = selectedImageCount,
+                        tieneVideo = hasSelectedVideo
+                    )
+                    Snackbar.make(binding.root, "Producto actualizado.", Snackbar.LENGTH_SHORT).show()
+                }
+
+                val navOptions = NavOptions.Builder()
+                    .setPopUpTo(R.id.fragmentoInicio, false)
+                    .build()
+                findNavController().navigate(R.id.accion_publicar_producto_a_inicio, null, navOptions)
+            },
+            alFallar = { mensaje ->
+                if (_binding == null) return@guardarProducto
+                cambiarCarga(false)
+                Snackbar.make(binding.root, mensaje, Snackbar.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    private fun cambiarCarga(cargando: Boolean) {
+        binding.botonPublicar.isEnabled = !cargando
+        binding.botonAgregarImagenes.isEnabled = !cargando
+        binding.botonAgregarVideo.isEnabled = !cargando
+        binding.botonPublicar.text = if (cargando) "Guardando..." else if (editingProductId == null) {
+            "Publicar producto"
+        } else {
+            "Guardar cambios"
+        }
     }
 
     private fun updateMultimediaLabels() {

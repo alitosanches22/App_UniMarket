@@ -34,6 +34,7 @@ class ProductDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         idProducto = requireArguments().getString(ARG_PRODUCT_ID).orEmpty()
         renderProduct()
+        cargarProductoDesdeApi()
     }
 
     private fun renderProduct() {
@@ -59,18 +60,20 @@ class ProductDetailFragment : Fragment() {
         renderGallery(product.cantidadImagenes)
 
         binding.botonFavorito.setOnClickListener {
-            MarketplaceRepository.toggleFavorite(product.id)
-            renderProduct()
+            cambiarFavorito(product)
         }
 
+        val isOwner = esProductoDelUsuario(product)
+        binding.botonContactarVendedor.isVisible = !isOwner
         binding.botonContactarVendedor.setOnClickListener {
-            findNavController().navigate(
-                R.id.accion_detalle_producto_a_chat,
-                bundleOf(ARG_PRODUCT_ID to product.id)
-            )
+            if (!isOwner) {
+                findNavController().navigate(
+                    R.id.accion_detalle_producto_a_chat,
+                    bundleOf(ARG_PRODUCT_ID to product.id)
+                )
+            }
         }
 
-        val isOwner = product.nombreVendedor == MarketplaceRepository.currentUser.nombreCompleto
         binding.grupoAccionesDueno.isVisible = isOwner
         binding.botonEditarProducto.setOnClickListener {
             findNavController().navigate(
@@ -79,11 +82,79 @@ class ProductDetailFragment : Fragment() {
             )
         }
         binding.botonMarcarVendido.setOnClickListener {
-            MarketplaceRepository.markSold(product.id)
-            renderProduct()
+            marcarVendido(product.id)
         }
         binding.botonEliminarProducto.setOnClickListener {
             confirmDelete(product.id)
+        }
+    }
+
+    private fun cargarProductoDesdeApi() {
+        RepositorioRemoto.cargarProducto(
+            idProducto = idProducto,
+            alCargar = { producto ->
+                if (_binding == null) return@cargarProducto
+                MarketplaceRepository.guardarProductoDesdeApi(producto)
+                renderProduct()
+            },
+            alFallar = {
+                // Si falla, se conserva el producto que ya estaba en cache local.
+            }
+        )
+    }
+
+    private fun cambiarFavorito(product: Producto) {
+        val usuario = MarketplaceRepository.usuarioAutenticado
+        val guardar = !MarketplaceRepository.isFavorite(product.id)
+
+        if (usuario == null) {
+            MarketplaceRepository.toggleFavorite(product.id)
+            renderProduct()
+            return
+        }
+
+        binding.botonFavorito.isEnabled = false
+        RepositorioRemoto.cambiarFavorito(
+            idUsuario = usuario.id,
+            idProducto = product.id,
+            guardar = guardar,
+            alCargar = {
+                if (_binding == null) return@cambiarFavorito
+                MarketplaceRepository.setFavorite(product.id, guardar)
+                renderProduct()
+            },
+            alFallar = { mensaje ->
+                if (_binding == null) return@cambiarFavorito
+                binding.botonFavorito.isEnabled = true
+                Snackbar.make(binding.root, mensaje, Snackbar.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    private fun marcarVendido(idProducto: String) {
+        binding.botonMarcarVendido.isEnabled = false
+        RepositorioRemoto.marcarProductoVendido(
+            idProducto = idProducto,
+            alCargar = {
+                if (_binding == null) return@marcarProductoVendido
+                MarketplaceRepository.markSold(idProducto)
+                renderProduct()
+                Snackbar.make(binding.root, "Producto marcado como vendido.", Snackbar.LENGTH_SHORT).show()
+            },
+            alFallar = { mensaje ->
+                if (_binding == null) return@marcarProductoVendido
+                binding.botonMarcarVendido.isEnabled = true
+                Snackbar.make(binding.root, mensaje, Snackbar.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    private fun esProductoDelUsuario(product: Producto): Boolean {
+        val usuario = MarketplaceRepository.usuarioAutenticado ?: MarketplaceRepository.currentUser
+        return if (product.idVendedor.isNotBlank()) {
+            product.idVendedor == usuario.id
+        } else {
+            product.nombreVendedor == usuario.nombreCompleto
         }
     }
 
@@ -112,10 +183,24 @@ class ProductDetailFragment : Fragment() {
             .setMessage("Esta accion quitara el producto de la lista principal y favoritos.")
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Eliminar") { _, _ ->
-                MarketplaceRepository.deleteProduct(idProducto)
-                findNavController().navigate(R.id.accion_detalle_producto_a_inicio)
+                eliminarProducto(idProducto)
             }
             .show()
+    }
+
+    private fun eliminarProducto(idProducto: String) {
+        RepositorioRemoto.eliminarProducto(
+            idProducto = idProducto,
+            alCargar = {
+                if (_binding == null) return@eliminarProducto
+                MarketplaceRepository.deleteProduct(idProducto)
+                findNavController().navigate(R.id.accion_detalle_producto_a_inicio)
+            },
+            alFallar = { mensaje ->
+                if (_binding == null) return@eliminarProducto
+                Snackbar.make(binding.root, mensaje, Snackbar.LENGTH_LONG).show()
+            }
+        )
     }
 
     override fun onDestroyView() {

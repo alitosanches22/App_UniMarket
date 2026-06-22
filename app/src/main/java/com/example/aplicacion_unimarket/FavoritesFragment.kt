@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.aplicacion_unimarket.databinding.FragmentoFavoritosBinding
 import com.example.aplicacion_unimarket.databinding.ItemProductoBinding
+import com.google.android.material.snackbar.Snackbar
 
 class FavoritesFragment : Fragment() {
 
@@ -28,6 +29,23 @@ class FavoritesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         renderFavorites()
+        cargarFavoritosDesdeApi()
+    }
+
+    private fun cargarFavoritosDesdeApi() {
+        val usuario = MarketplaceRepository.usuarioAutenticado ?: return
+        RepositorioRemoto.cargarFavoritos(
+            idUsuario = usuario.id,
+            alCargar = { favoritos ->
+                if (_binding == null) return@cargarFavoritos
+                MarketplaceRepository.establecerFavoritosDesdeApi(favoritos)
+                renderFavorites()
+            },
+            alFallar = { mensaje ->
+                if (_binding == null) return@cargarFavoritos
+                Snackbar.make(binding.root, mensaje, Snackbar.LENGTH_LONG).show()
+            }
+        )
     }
 
     private fun renderFavorites() {
@@ -46,8 +64,7 @@ class FavoritesFragment : Fragment() {
             itemBinding.textoVendedor.text = product.nombreVendedor
             itemBinding.botonFavorito.text = "Eliminar"
             itemBinding.botonFavorito.setOnClickListener {
-                MarketplaceRepository.removeFavorite(product.id)
-                renderFavorites()
+                eliminarFavorito(product, itemBinding)
             }
             itemBinding.root.setOnClickListener {
                 findNavController().navigate(
@@ -56,6 +73,39 @@ class FavoritesFragment : Fragment() {
                 )
             }
             binding.contenedorFavoritos.addView(itemBinding.root)
+        }
+    }
+
+    private fun eliminarFavorito(product: Producto, itemBinding: ItemProductoBinding) {
+        val usuario = MarketplaceRepository.usuarioAutenticado
+        if (usuario == null) {
+            MarketplaceRepository.removeFavorite(product.id)
+            renderFavorites()
+            return
+        }
+
+        itemBinding.botonFavorito.isEnabled = false
+        RepositorioRemoto.cambiarFavorito(
+            idUsuario = usuario.id,
+            idProducto = product.id,
+            guardar = false,
+            alCargar = {
+                if (_binding == null) return@cambiarFavorito
+                MarketplaceRepository.removeFavorite(product.id)
+                renderFavorites()
+            },
+            alFallar = { mensaje ->
+                if (_binding == null) return@cambiarFavorito
+                itemBinding.botonFavorito.isEnabled = true
+                Snackbar.make(binding.root, mensaje, Snackbar.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (_binding != null) {
+            cargarFavoritosDesdeApi()
         }
     }
 

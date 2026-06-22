@@ -38,15 +38,36 @@ class LoginFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val navOptions = NavOptions.Builder()
-                .setPopUpTo(R.id.fragmentoInicioSesion, true)
-                .build()
-            findNavController().navigate(R.id.accion_inicio_sesion_a_inicio, null, navOptions)
+            cambiarCarga(true)
+            RepositorioRemoto.iniciarSesion(
+                correo = email,
+                contrasena = password,
+                alCargar = { usuario ->
+                    if (_binding == null) return@iniciarSesion
+                    MarketplaceRepository.iniciarSesion(usuario)
+                    cambiarCarga(false)
+                    val navOptions = NavOptions.Builder()
+                        .setPopUpTo(R.id.fragmentoInicioSesion, true)
+                        .build()
+                    findNavController().navigate(R.id.accion_inicio_sesion_a_inicio, null, navOptions)
+                },
+                alFallar = { mensaje ->
+                    if (_binding == null) return@iniciarSesion
+                    cambiarCarga(false)
+                    Snackbar.make(binding.root, mensaje, Snackbar.LENGTH_LONG).show()
+                }
+            )
         }
 
         binding.botonRegistrarse.setOnClickListener {
             findNavController().navigate(R.id.accion_inicio_sesion_a_registro)
         }
+    }
+
+    private fun cambiarCarga(cargando: Boolean) {
+        binding.botonIniciarSesion.isEnabled = !cargando
+        binding.botonRegistrarse.isEnabled = !cargando
+        binding.botonIniciarSesion.text = if (cargando) "Iniciando..." else "Iniciar sesion"
     }
 
     override fun onDestroyView() {
