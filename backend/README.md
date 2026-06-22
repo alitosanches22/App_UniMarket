@@ -29,20 +29,30 @@ DATABASE_URL=postgres://postgres:tu_password@localhost:5432/unimarket_db
 
 ## 3. Instalar y correr
 
+Primero instala Node.js LTS desde:
+
+```text
+https://nodejs.org
+```
+
+Despues cierra y vuelve a abrir PowerShell o Android Studio para que `node` y `npm` queden disponibles.
+
 En este proyecto ya puedes iniciar el backend con doble clic:
 
 ```text
 backend/iniciar_backend.bat
 ```
 
-Deja esa ventana abierta mientras usas la app. Si tienes Node.js instalado normalmente, tambien puedes usar:
+El archivo `.bat` instala dependencias si falta `node_modules` y luego levanta la API. Deja esa ventana abierta mientras usas la app.
+
+Si prefieres hacerlo manual:
 
 ```powershell
 npm install
 npm run dev
 ```
 
-Si `npm` no funciona en PowerShell, usa el archivo `iniciar_backend.bat`.
+Si `npm` no funciona, reinstala Node.js LTS y vuelve a abrir la terminal.
 
 La API queda en:
 
